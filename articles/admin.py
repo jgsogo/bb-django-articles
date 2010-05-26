@@ -3,7 +3,13 @@ from django.contrib.auth.models import User
 from django.contrib.sites.models import Site
 from django.utils.translation import ugettext_lazy as _
 from forms import ArticleAdminForm
+from models import Tag, Article, ArticleStatus, Attachment
 from models import Tag, Article, Attachment
+
+class ArticleStatusAdmin(admin.ModelAdmin):
+    list_display = ('name', 'is_live')
+    list_filter = ('is_live',)
+    search_fields = ('name',)
 
 class AttachmentInline(admin.TabularInline):
     model = Attachment
@@ -11,8 +17,8 @@ class AttachmentInline(admin.TabularInline):
     max_num = 15
 
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'publish_date', 'expiration_date', 'is_active')
-    list_filter = ('author', 'is_active', 'publish_date', 'expiration_date', 'sites')
+    list_display = ('title', 'status', 'author', 'publish_date', 'expiration_date', 'is_active')
+    list_filter = ('author', 'status', 'is_active', 'publish_date', 'expiration_date', 'sites')
     list_per_page = 25
     search_fields = ('title', 'keywords', 'description', 'content')
     date_hierarchy = 'publish_date'
@@ -22,7 +28,7 @@ class ArticleAdmin(admin.ModelAdmin):
     ]
 
     fieldsets = (
-        (None, {'fields': ('title', 'content', 'tags', 'markup')}),
+        (None, {'fields': ('title', 'content', 'tags', 'markup', 'status')}),
         ('Metadata', {
             'fields': ('keywords', 'description',),
             'classes': ('collapse',)
@@ -75,3 +81,5 @@ class ArticleAdmin(admin.ModelAdmin):
 
 admin.site.register(Tag)
 admin.site.register(Article, ArticleAdmin)
+admin.site.register(ArticleStatus, ArticleStatusAdmin)
+
