@@ -1,3 +1,9 @@
+from base64 import encodestring
+from datetime import datetime
+import mimetypes
+import re
+import urllib
+
 from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -7,11 +13,6 @@ from django.core.cache import cache
 from django.conf import settings
 from django.template.defaultfilters import slugify, striptags
 from django.utils.translation import ugettext_lazy as _
-from datetime import datetime
-from base64 import encodestring
-import mimetypes
-import re
-import urllib
 
 WORD_LIMIT = getattr(settings, 'ARTICLES_TEASER_LIMIT', 75)
 AUTO_TAG = getattr(settings, 'ARTICLES_AUTO_TAG', True)
@@ -78,17 +79,17 @@ class Tag(models.Model):
 
     @models.permalink
     def get_absolute_url(self):
-        return ('articles_display_tag', (self.clean,))
+        return ('articles_display_tag', (self.cleaned,))
 
     @property
-    def clean(self):
+    def cleaned(self):
         """Returns the clean version of the tag"""
 
         return self.slug or Tag.clean_tag(self.name)
 
     @property
     def rss_name(self):
-        return u'tags/%s' % self.clean
+        return u'tags/%s' % self.cleaned
 
     class Meta:
         ordering = ('name',)
