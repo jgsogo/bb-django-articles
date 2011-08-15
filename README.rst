@@ -110,10 +110,14 @@ Next, set a couple of settings in your ``settings.py``:
 
 Less frequently changed settings:
 
-* ``ARTICLES_TEASER_LIMIT``: The number of words to display in the teaser. Defaults to ``75``.
-* ``ARTICLES_AUTO_TAG``: Whether or not to automatically tag articles. Defaults to ``True``.
-* ``ARTICLES_DEFAULT_DB``: Database in which to store articles. Defaults to ``default``.
-* ``ARTICLES_LOOKUP_LINK_TITLE``: Whether to fetch the title of remote links or use the local name of the link. Defaults to ``True``.
+* ``ARTICLES_TEASER_LIMIT``: The number of words to display in the teaser.
+  Defaults to ``75``.
+* ``ARTICLES_AUTO_TAG``: Whether or not to automatically tag articles. Defaults
+  to ``True``.
+* ``ARTICLES_DEFAULT_DB``: Database in which to store articles. Defaults to
+  ``default``.
+* ``ARTICLES_LOOKUP_LINK_TITLE``: Whether to fetch the title of remote links or
+  use the local name of the link. Defaults to ``True``.
 
 Also, make sure that you have the following context processors in your
 ``TEMPLATE_CONTEXT_PROCESSORS`` tuple:

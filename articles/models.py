@@ -382,6 +382,8 @@ class Article(models.Model):
 
             # look in the cache for the link target's title
             if not cache.get(key):
+                title = link.group(2)
+
                 if LOOKUP_LINK_TITLE:
                     try:
                         # open the URL
@@ -392,12 +394,9 @@ class Article(models.Model):
                         # try to determine the title of the target
                         title = TITLE_RE.search(html)
                         if title: title = title.group(1)
-                        else: title = link.group(2)
                     except:
                         # if anything goes wrong (ie IOError), use the link's text
-                        title = link.group(2)
-                else:
-                    title = link.group(2)
+                        pass
 
                 # cache the page title for a week
                 cache.set(key, title, 604800)
