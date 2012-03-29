@@ -26,7 +26,7 @@ class AttachmentInline(admin.TabularInline):
     max_num = 15
 
 class ArticleAdmin(admin.ModelAdmin):
-    list_display = ('title', 'status', 'author', 'publish_date',
+    list_display = ('title', 'tag_count', 'status', 'author', 'publish_date',
                     'expiration_date', 'is_active')
     list_filter = ('author', 'status', 'is_active', 'publish_date',
                    'expiration_date', 'sites')
@@ -39,7 +39,7 @@ class ArticleAdmin(admin.ModelAdmin):
     ]
 
     fieldsets = (
-        (None, {'fields': ('title', 'content', 'auto_tag', 'markup', 'status')}),
+        (None, {'fields': ('title', 'content', 'tags', 'auto_tag', 'markup', 'status')}),
         ('Metadata', {
             'fields': ('keywords', 'description',),
             'classes': ('collapse',)
@@ -62,9 +62,9 @@ class ArticleAdmin(admin.ModelAdmin):
     filter_horizontal = ('followup_for', 'related_articles')
     prepopulated_fields = {'slug': ('title',)}
 
-    #def tag_count(self, obj):
-    #    return str(obj.tags.count())
-    #tag_count.short_description = _('Tags')
+    def tag_count(self, obj):
+        return str(obj.tags.count())
+    tag_count.short_description = _('Tags')
 
     def mark_active(self, request, queryset):
         queryset.update(is_active=True)
@@ -110,7 +110,7 @@ class ArticleAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         """Set the article's author based on the logged in user and make sure at least one site is selected"""
-
+        log.debug('cleaned_data[\'tags\']=%s' % form.cleaned_data['tags'])
         try:
             author = obj.author
         except User.DoesNotExist:
@@ -119,8 +119,8 @@ class ArticleAdmin(admin.ModelAdmin):
         obj.save()
 
         # this requires an Article object already
-        obj.do_auto_tag('default')
-#        form.cleaned_data['tags'] += list(obj.tags.all())
+        #obj.do_auto_tag('default')
+        #form.cleaned_data['tags'] += list(obj.tags.all())
 
     def queryset(self, request):
         """Limit the list of articles to article posted by this user unless they're a superuser"""

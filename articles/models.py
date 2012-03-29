@@ -15,7 +15,9 @@ from django.conf import settings
 from django.template.defaultfilters import slugify, striptags
 from django.utils.translation import ugettext_lazy as _
 
-from decorators import logtime, once_per_instance
+from taggit.managers import TaggableManager
+
+from articles.decorators import logtime, once_per_instance
 
 WORD_LIMIT = getattr(settings, 'ARTICLES_TEASER_LIMIT', 75)
 AUTO_TAG = getattr(settings, 'ARTICLES_AUTO_TAG', True)
@@ -188,6 +190,7 @@ class Article(models.Model):
     rendered_content = models.TextField()
 
 #    tags = models.ManyToManyField(Tag, help_text=_('Tags that describe this article'), blank=True)
+    tags = TaggableManager()
     auto_tag = models.BooleanField(default=AUTO_TAG, blank=True, help_text=_('Check this if you want to automatically assign any existing tags to this article based on its content.'))
     followup_for = models.ManyToManyField('self', symmetrical=False, blank=True, help_text=_('Select any other articles that this article follows up on.'), related_name='followups')
     related_articles = models.ManyToManyField('self', blank=True)
@@ -289,15 +292,17 @@ class Article(models.Model):
         return False
 
     def do_tags_to_keywords(self):
+        # Adding django-taggit
+        return False
         """
         If meta keywords is empty, sets them using the article tags.
 
         Returns True if an additional save is required, False otherwise.
         """
 
-#        if len(self.keywords.strip()) == 0:
-#            self.keywords = ', '.join([t.name for t in self.tags.all()])
-#            return True
+        if len(self.keywords.strip()) == 0:
+            self.keywords = ', '.join([t.name for t in self.tags.all()])
+            return True
 
         return False
 

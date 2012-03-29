@@ -3,7 +3,7 @@ import logging
 from django.db.models import signals, Q
 
 from decorators import logtime
-from models import Article, Tag
+from models import Article#, Tag
 
 log = logging.getLogger('articles.listeners')
 
@@ -31,4 +31,4 @@ def apply_new_tag(sender, instance, created, using='default', **kwargs):
         article.tags.add(instance)
         article.save()
 
-signals.post_save.connect(apply_new_tag, sender=Tag)
+#signals.post_save.connect(apply_new_tag, sender=Tag)
