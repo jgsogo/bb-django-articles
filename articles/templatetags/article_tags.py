@@ -2,7 +2,7 @@ from django import template
 from django.core.cache import cache
 from django.core.urlresolvers import resolve, reverse, Resolver404
 from django.db.models import Count
-from articles.models import Article, Tag
+from articles.models import Article#, Tag
 from datetime import datetime
 import math
 
@@ -267,6 +267,9 @@ def get_page_url(parser, token):
     return GetPageURLNode(args[1], varname)
 
 def tag_cloud():
+    # Adding django-taggit, no tag_cloud already implemented
+    return {'tags': None}
+    
     """Provides the tags with a "weight" attribute to build a tag cloud"""
 
     cache_key = 'tag_cloud_tags'

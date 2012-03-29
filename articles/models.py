@@ -71,47 +71,47 @@ def get_name(user):
     return name
 User.get_name = get_name
 
-class Tag(models.Model):
-    name = models.CharField(max_length=64, unique=True)
-    slug = models.CharField(max_length=64, unique=True, null=True, blank=True)
-
-    def __unicode__(self):
-        return self.name
-
-    @staticmethod
-    def clean_tag(name):
-        """Replace spaces with dashes, in case someone adds such a tag manually"""
-
-        name = name.replace(' ', '-').encode('ascii', 'ignore')
-        name = TAG_RE.sub('', name)
-        clean = name.lower().strip()
-
-        log.debug('Cleaned tag "%s" to "%s"' % (name, clean))
-        return clean
-
-    def save(self, *args, **kwargs):
-        """Cleans up any characters I don't want in a URL"""
-
-        log.debug('Ensuring that tag "%s" has a slug' % (self,))
-        self.slug = Tag.clean_tag(self.name)
-        super(Tag, self).save(*args, **kwargs)
-
-    @models.permalink
-    def get_absolute_url(self):
-        return ('articles_display_tag', (self.cleaned,))
-
-    @property
-    def cleaned(self):
-        """Returns the clean version of the tag"""
-
-        return self.slug or Tag.clean_tag(self.name)
-
-    @property
-    def rss_name(self):
-        return self.cleaned
-
-    class Meta:
-        ordering = ('name',)
+#class Tag(models.Model):
+#    name = models.CharField(max_length=64, unique=True)
+#    slug = models.CharField(max_length=64, unique=True, null=True, blank=True)
+#
+#    def __unicode__(self):
+#        return self.name
+#
+#    @staticmethod
+#    def clean_tag(name):
+#        """Replace spaces with dashes, in case someone adds such a tag manually"""
+#
+#        name = name.replace(' ', '-').encode('ascii', 'ignore')
+#        name = TAG_RE.sub('', name)
+#        clean = name.lower().strip()
+#
+#        log.debug('Cleaned tag "%s" to "%s"' % (name, clean))
+#        return clean
+#
+#    def save(self, *args, **kwargs):
+#        """Cleans up any characters I don't want in a URL"""
+#
+#        log.debug('Ensuring that tag "%s" has a slug' % (self,))
+#        self.slug = Tag.clean_tag(self.name)
+#        super(Tag, self).save(*args, **kwargs)
+#
+#    @models.permalink
+#    def get_absolute_url(self):
+#        return ('articles_display_tag', (self.cleaned,))
+#
+#    @property
+#    def cleaned(self):
+#        """Returns the clean version of the tag"""
+#
+#        return self.slug or Tag.clean_tag(self.name)
+#
+#    @property
+#    def rss_name(self):
+#        return self.cleaned
+#
+#    class Meta:
+#        ordering = ('name',)
 
 class ArticleStatusManager(models.Manager):
 
@@ -187,7 +187,7 @@ class Article(models.Model):
     content = models.TextField()
     rendered_content = models.TextField()
 
-    tags = models.ManyToManyField(Tag, help_text=_('Tags that describe this article'), blank=True)
+#    tags = models.ManyToManyField(Tag, help_text=_('Tags that describe this article'), blank=True)
     auto_tag = models.BooleanField(default=AUTO_TAG, blank=True, help_text=_('Check this if you want to automatically assign any existing tags to this article based on its content.'))
     followup_for = models.ManyToManyField('self', symmetrical=False, blank=True, help_text=_('Select any other articles that this article follows up on.'), related_name='followups')
     related_articles = models.ManyToManyField('self', blank=True)
@@ -295,9 +295,9 @@ class Article(models.Model):
         Returns True if an additional save is required, False otherwise.
         """
 
-        if len(self.keywords.strip()) == 0:
-            self.keywords = ', '.join([t.name for t in self.tags.all()])
-            return True
+#        if len(self.keywords.strip()) == 0:
+#            self.keywords = ', '.join([t.name for t in self.tags.all()])
+#            return True
 
         return False
 
@@ -316,7 +316,8 @@ class Article(models.Model):
 
     @logtime
     @once_per_instance
-    def do_auto_tag(self, using=DEFAULT_DB):
+    def do_auto_tag(self, using=DEFAULT_DB):        
+        return False # Adding django-taggit, don't pass through this function
         """
         Performs the auto-tagging work if necessary.
 
