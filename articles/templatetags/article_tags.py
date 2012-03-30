@@ -1,10 +1,14 @@
+import logging
+
 from django import template
 from django.core.cache import cache
 from django.core.urlresolvers import resolve, reverse, Resolver404
 from django.db.models import Count
-from articles.models import Article#, Tag
+from articles.models import Article, Tag
 from datetime import datetime
 import math
+
+log = logging.getLogger('articles.templatetags')
 
 register = template.Library()
 
@@ -267,9 +271,6 @@ def get_page_url(parser, token):
     return GetPageURLNode(args[1], varname)
 
 def tag_cloud():
-    # Adding django-taggit, no tag_cloud already implemented
-    return {'tags': None}
-    
     """Provides the tags with a "weight" attribute to build a tag cloud"""
 
     cache_key = 'tag_cloud_tags'
@@ -281,8 +282,8 @@ def tag_cloud():
         if len(tags) == 0:
             # go no further
             return {}
-
-        min_count = max_count = tags[0].article_set.count()
+        log.debug('tags[0] = %s' % tags)
+        min_count = max_count = Article.objects.filter(tags__slug__in=[tags[0]]).count()
         for tag in tags:
             if tag.count < min_count:
                 min_count = tag.count

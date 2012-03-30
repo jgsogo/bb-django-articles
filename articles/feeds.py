@@ -5,9 +5,7 @@ from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.utils.feedgenerator import Atom1Feed
 
-from articles.models import Article#, Tag
-
-from taggit.models import Tag
+from articles.models import Article, Tag
 
 # default to 24 hours for feed caching
 FEED_TIMEOUT = getattr(settings, 'ARTICLE_FEED_TIMEOUT', 86400)
@@ -57,7 +55,6 @@ class TagFeed(Feed, SiteMixin):
         return "%s: Newest Articles Tagged '%s'" % (self.site.name, obj.name)
 
     def link(self, obj):
-        return '' # django-taggit Tag model has no get_absolute_url
         return obj.get_absolute_url()
 
     def description(self, obj):

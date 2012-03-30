@@ -4,18 +4,16 @@ from django.contrib import admin
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 from forms import ArticleAdminForm
-from models import Article, ArticleStatus, Attachment
-
-from taggit.models import Tag
+from articles.models import Article, ArticleStatus, Attachment, Tag
 
 log = logging.getLogger('articles.admin')
 
-#class TagAdmin(admin.ModelAdmin):
-#    list_display = ('name', 'article_count')
-#
-#    def article_count(self, obj):
-#        return obj.article_set.count()
-#    article_count.short_description = _('Applied To')
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'article_count')
+
+    def article_count(self, obj):
+        return obj.article_set.count()
+    article_count.short_description = _('Applied To')
 
 class ArticleStatusAdmin(admin.ModelAdmin):
     list_display = ('name', 'is_live')

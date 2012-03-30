@@ -15,9 +15,6 @@ from django.conf import settings
 from django.template.defaultfilters import slugify, striptags
 from django.utils.translation import ugettext_lazy as _
 
-from taggit.managers import TaggableManager
-from taggit.models import Tag
-
 from articles.decorators import logtime, once_per_instance
 
 WORD_LIMIT = getattr(settings, 'ARTICLES_TEASER_LIMIT', 75)
@@ -74,47 +71,71 @@ def get_name(user):
     return name
 User.get_name = get_name
 
-#class Tag(models.Model):
-#    name = models.CharField(max_length=64, unique=True)
-#    slug = models.CharField(max_length=64, unique=True, null=True, blank=True)
-#
-#    def __unicode__(self):
-#        return self.name
-#
-#    @staticmethod
-#    def clean_tag(name):
-#        """Replace spaces with dashes, in case someone adds such a tag manually"""
-#
-#        name = name.replace(' ', '-').encode('ascii', 'ignore')
-#        name = TAG_RE.sub('', name)
-#        clean = name.lower().strip()
-#
-#        log.debug('Cleaned tag "%s" to "%s"' % (name, clean))
-#        return clean
-#
-#    def save(self, *args, **kwargs):
-#        """Cleans up any characters I don't want in a URL"""
-#
-#        log.debug('Ensuring that tag "%s" has a slug' % (self,))
-#        self.slug = Tag.clean_tag(self.name)
-#        super(Tag, self).save(*args, **kwargs)
-#
-#    @models.permalink
-#    def get_absolute_url(self):
-#        return ('articles_display_tag', (self.cleaned,))
-#
-#    @property
-#    def cleaned(self):
-#        """Returns the clean version of the tag"""
-#
-#        return self.slug or Tag.clean_tag(self.name)
-#
-#    @property
-#    def rss_name(self):
-#        return self.cleaned
-#
-#    class Meta:
-#        ordering = ('name',)
+try:
+    from taggit.models import Tag
+    """ Adding some functions to taggit's Tag model to reduce modifications in django-articles """
+    if not getattr(Tag, 'rss_name', None):
+        log.debug('Adding rss_name method to model Tag')
+        @property
+        def rss_name(self):
+            return self.cleaned
+        Tag.rss_name = rss_name
+    if not getattr(Tag, 'cleaned', None):
+        log.debug('Adding cleaned method to model Tag')
+        @property
+        def cleaned(self):
+            return self.slug or Tag.clean_tag(self_name)
+        Tag.cleaned = cleaned
+    if not getattr(Tag, 'get_absolute_url', None):
+        log.debug('Adding get_absolute_url method to model Tag')
+        @models.permalink
+        def get_absolute_url(self):
+            log.debug('Tag::get_absolute_url for %s' % self)
+            return ('articles_display_tag', (self.cleaned,))
+        Tag.get_absolute_url = get_absolute_url
+
+except ImportError:
+    class Tag(models.Model):
+        name = models.CharField(max_length=64, unique=True)
+        slug = models.CharField(max_length=64, unique=True, null=True, blank=True)
+
+        def __unicode__(self):
+            return self.name
+
+        @staticmethod
+        def clean_tag(name):
+            """Replace spaces with dashes, in case someone adds such a tag manually"""
+
+            name = name.replace(' ', '-').encode('ascii', 'ignore')
+            name = TAG_RE.sub('', name)
+            clean = name.lower().strip()
+
+            log.debug('Cleaned tag "%s" to "%s"' % (name, clean))
+            return clean
+
+        def save(self, *args, **kwargs):
+            """Cleans up any characters I don't want in a URL"""
+
+            log.debug('Ensuring that tag "%s" has a slug' % (self,))
+            self.slug = Tag.clean_tag(self.name)
+            super(Tag, self).save(*args, **kwargs)
+
+        @models.permalink
+        def get_absolute_url(self):
+            return ('articles_display_tag', (self.cleaned,))
+
+        @property
+        def cleaned(self):
+            """Returns the clean version of the tag"""
+
+            return self.slug or Tag.clean_tag(self.name)
+
+        @property
+        def rss_name(self):
+            return self.cleaned
+
+        class Meta:
+            ordering = ('name',)
 
 class ArticleStatusManager(models.Manager):
 
@@ -176,6 +197,12 @@ MARKUP_HELP = _("""Select the type of markup you are using in this article.
 <li><a href="http://thresholdstate.com/articles/4312/the-textile-reference-manual" target="_blank">Textile Guide</a></li>
 </ul>""")
 
+try:
+    from taggit.managers import TaggableManager
+    tags_many_to_many_field = TaggableManager(blank=True)
+except ImportError:
+    tags_many_to_many_field = models.ManyToManyField(Tag, help_text=_('Tags that describe this article'), blank=True)
+
 class Article(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField(unique_for_year='publish_date')
@@ -190,8 +217,7 @@ class Article(models.Model):
     content = models.TextField()
     rendered_content = models.TextField()
 
-#    tags = models.ManyToManyField(Tag, help_text=_('Tags that describe this article'), blank=True)
-    tags = TaggableManager(blank=True)
+    tags = tags_many_to_many_field
     auto_tag = models.BooleanField(default=AUTO_TAG, blank=True, help_text=_('Check this if you want to automatically assign any existing tags to this article based on its content.'))
     followup_for = models.ManyToManyField('self', symmetrical=False, blank=True, help_text=_('Select any other articles that this article follows up on.'), related_name='followups')
     related_articles = models.ManyToManyField('self', blank=True)
