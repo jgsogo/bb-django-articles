@@ -8,8 +8,6 @@ from articles.models import Article, Tag
 from datetime import datetime
 import math
 
-log = logging.getLogger('articles.templatetags')
-
 register = template.Library()
 
 class GetCategoriesNode(template.Node):
@@ -282,7 +280,7 @@ def tag_cloud():
         if len(tags) == 0:
             # go no further
             return {}
-        log.debug('tags[0] = %s' % tags)
+
         min_count = max_count = Article.objects.filter(tags__slug__in=[tags[0]]).count()
         for tag in tags:
             if tag.count < min_count:

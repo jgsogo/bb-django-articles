@@ -62,7 +62,10 @@ class ArticleAdmin(admin.ModelAdmin):
         }),
     )
 
-    filter_horizontal = ('followup_for', 'related_articles')
+    if USE_TAGGIT:
+        filter_horizontal = ('followup_for', 'related_articles')
+    else:
+        filter_horizontal = ('tags', 'followup_for', 'related_articles')
     prepopulated_fields = {'slug': ('title',)}
 
     def tag_count(self, obj):
@@ -113,7 +116,6 @@ class ArticleAdmin(admin.ModelAdmin):
 
     def save_model(self, request, obj, form, change):
         """Set the article's author based on the logged in user and make sure at least one site is selected"""
-        log.debug('cleaned_data[\'tags\']=%s' % form.cleaned_data['tags'])
         try:
             author = obj.author
         except User.DoesNotExist:
