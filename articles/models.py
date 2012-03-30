@@ -16,6 +16,7 @@ from django.template.defaultfilters import slugify, striptags
 from django.utils.translation import ugettext_lazy as _
 
 from taggit.managers import TaggableManager
+from taggit.models import Tag
 
 from articles.decorators import logtime, once_per_instance
 
@@ -190,7 +191,7 @@ class Article(models.Model):
     rendered_content = models.TextField()
 
 #    tags = models.ManyToManyField(Tag, help_text=_('Tags that describe this article'), blank=True)
-    tags = TaggableManager()
+    tags = TaggableManager(blank=True)
     auto_tag = models.BooleanField(default=AUTO_TAG, blank=True, help_text=_('Check this if you want to automatically assign any existing tags to this article based on its content.'))
     followup_for = models.ManyToManyField('self', symmetrical=False, blank=True, help_text=_('Select any other articles that this article follows up on.'), related_name='followups')
     related_articles = models.ManyToManyField('self', blank=True)
@@ -292,8 +293,6 @@ class Article(models.Model):
         return False
 
     def do_tags_to_keywords(self):
-        # Adding django-taggit
-        return False
         """
         If meta keywords is empty, sets them using the article tags.
 
@@ -322,7 +321,6 @@ class Article(models.Model):
     @logtime
     @once_per_instance
     def do_auto_tag(self, using=DEFAULT_DB):        
-        return False # Adding django-taggit, don't pass through this function
         """
         Performs the auto-tagging work if necessary.
 

@@ -119,8 +119,8 @@ class ArticleAdmin(admin.ModelAdmin):
         obj.save()
 
         # this requires an Article object already
-        #obj.do_auto_tag('default')
-        #form.cleaned_data['tags'] += list(obj.tags.all())
+        obj.do_auto_tag('default')
+        form.cleaned_data['tags'] += obj.tags.all()
 
     def queryset(self, request):
         """Limit the list of articles to article posted by this user unless they're a superuser"""
