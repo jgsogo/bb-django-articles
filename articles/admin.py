@@ -6,6 +6,8 @@ from django.utils.translation import ugettext_lazy as _
 from forms import ArticleAdminForm
 from models import Article, ArticleStatus, Attachment
 
+from taggit.models import Tag
+
 log = logging.getLogger('articles.admin')
 
 #class TagAdmin(admin.ModelAdmin):
@@ -88,7 +90,7 @@ class ArticleAdmin(admin.ModelAdmin):
         for status in ArticleStatus.objects.all():
             name = 'mark_status_%i' % status.id
             actions[name] = (dynamic_status(name, status), name, _('Set status of selected to "%s"' % status))
-        """
+        
         def dynamic_tag(name, tag):
             def status_func(self, request, queryset):
                 for article in queryset.iterator():
@@ -103,7 +105,7 @@ class ArticleAdmin(admin.ModelAdmin):
         for tag in Tag.objects.all():
             name = 'apply_tag_%s' % tag.pk
             actions[name] = (dynamic_tag(name, tag), name, _('Apply Tag: %s' % (tag.slug,)))
-        """
+        
         return actions
 
     actions = [mark_active, mark_inactive]
