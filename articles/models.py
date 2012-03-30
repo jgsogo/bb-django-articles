@@ -18,7 +18,11 @@ from django.utils.translation import ugettext_lazy as _
 from articles.decorators import logtime, once_per_instance
 
 USE_TAGGIT = 'taggit' in settings.INSTALLED_APPS
-
+if USE_TAGGIT:
+    from taggit.managers import TaggableManager
+    from taggit.models import Tag
+        
+        
 WORD_LIMIT = getattr(settings, 'ARTICLES_TEASER_LIMIT', 75)
 AUTO_TAG = getattr(settings, 'ARTICLES_AUTO_TAG', True)
 DEFAULT_DB = getattr(settings, 'ARTICLES_DEFAULT_DB', 'default')
@@ -74,7 +78,6 @@ def get_name(user):
 User.get_name = get_name
 
 if USE_TAGGIT:
-    from taggit.models import Tag
     """ Adding some functions to taggit's Tag model to reduce modifications in django-articles """
     if not getattr(Tag, 'rss_name', None):
         log.debug('Adding rss_name method to model Tag')
@@ -199,12 +202,6 @@ MARKUP_HELP = _("""Select the type of markup you are using in this article.
 <li><a href="http://thresholdstate.com/articles/4312/the-textile-reference-manual" target="_blank">Textile Guide</a></li>
 </ul>""")
 
-if USE_TAGGIT:
-    from taggit.managers import TaggableManager
-    tags_many_to_many_field = TaggableManager(blank=True)
-else:
-    tags_many_to_many_field = models.ManyToManyField(Tag, help_text=_('Tags that describe this article'), blank=True)
-
 class Article(models.Model):
     title = models.CharField(max_length=100)
     slug = models.SlugField(unique_for_year='publish_date')
@@ -219,7 +216,11 @@ class Article(models.Model):
     content = models.TextField()
     rendered_content = models.TextField()
 
-    tags = tags_many_to_many_field
+    if USE_TAGGIT:
+        tags = TaggableManager(blank=True)
+    else:
+        tags = models.ManyToManyField(Tag, help_text=_('Tags that describe this article'), blank=True)
+        
     auto_tag = models.BooleanField(default=AUTO_TAG, blank=True, help_text=_('Check this if you want to automatically assign any existing tags to this article based on its content.'))
     followup_for = models.ManyToManyField('self', symmetrical=False, blank=True, help_text=_('Select any other articles that this article follows up on.'), related_name='followups')
     related_articles = models.ManyToManyField('self', blank=True)
