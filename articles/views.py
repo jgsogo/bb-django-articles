@@ -32,7 +32,8 @@ def display_blog_page(request, tag=None, username=None, year=None, month=None, p
             # for backwards-compatibility
             tag = get_object_or_404(Tag, name__iexact=tag)
 
-        articles = tag.article_set.live(user=request.user).select_related()
+        #articles = tag.article_set.live(user=request.user).select_related()
+        articles = Article.objects.live(user=request.user).filter(tags__slug__in=[tag.slug]).distinct().select_related()
         template = 'articles/display_tag.html'
         context['tag'] = tag
 
