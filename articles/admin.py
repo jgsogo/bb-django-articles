@@ -2,11 +2,14 @@ import logging
 
 from django.contrib import admin
 from django.contrib.auth.models import User
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from forms import ArticleAdminForm
 from articles.models import Article, ArticleStatus, Attachment, Tag
 
 log = logging.getLogger('articles.admin')
+
+USE_TAGGIT = 'taggit' in settings.INSTALLED_APPS
 
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'article_count')
@@ -120,7 +123,7 @@ class ArticleAdmin(admin.ModelAdmin):
 
         # this requires an Article object already
         obj.do_auto_tag('default')
-        form.cleaned_data['tags'] += obj.tags.all()
+        form.cleaned_data['tags'] += list(obj.tags.all())
 
     def queryset(self, request):
         """Limit the list of articles to article posted by this user unless they're a superuser"""
@@ -130,7 +133,8 @@ class ArticleAdmin(admin.ModelAdmin):
         else:
             return self.model._default_manager.filter(author=request.user)
 
-#admin.site.register(Tag, TagAdmin)
+if not USE_TAGGIT:
+    admin.site.register(Tag, TagAdmin)
 admin.site.register(Article, ArticleAdmin)
 admin.site.register(ArticleStatus, ArticleStatusAdmin)
 

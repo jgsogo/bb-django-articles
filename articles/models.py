@@ -17,6 +17,8 @@ from django.utils.translation import ugettext_lazy as _
 
 from articles.decorators import logtime, once_per_instance
 
+USE_TAGGIT = 'taggit' in settings.INSTALLED_APPS
+
 WORD_LIMIT = getattr(settings, 'ARTICLES_TEASER_LIMIT', 75)
 AUTO_TAG = getattr(settings, 'ARTICLES_AUTO_TAG', True)
 DEFAULT_DB = getattr(settings, 'ARTICLES_DEFAULT_DB', 'default')
@@ -71,7 +73,7 @@ def get_name(user):
     return name
 User.get_name = get_name
 
-try:
+if USE_TAGGIT:
     from taggit.models import Tag
     """ Adding some functions to taggit's Tag model to reduce modifications in django-articles """
     if not getattr(Tag, 'rss_name', None):
@@ -94,7 +96,7 @@ try:
             return ('articles_display_tag', (self.cleaned,))
         Tag.get_absolute_url = get_absolute_url
 
-except ImportError:
+else:
     class Tag(models.Model):
         name = models.CharField(max_length=64, unique=True)
         slug = models.CharField(max_length=64, unique=True, null=True, blank=True)
@@ -197,10 +199,10 @@ MARKUP_HELP = _("""Select the type of markup you are using in this article.
 <li><a href="http://thresholdstate.com/articles/4312/the-textile-reference-manual" target="_blank">Textile Guide</a></li>
 </ul>""")
 
-try:
+if USE_TAGGIT:
     from taggit.managers import TaggableManager
     tags_many_to_many_field = TaggableManager(blank=True)
-except ImportError:
+else:
     tags_many_to_many_field = models.ManyToManyField(Tag, help_text=_('Tags that describe this article'), blank=True)
 
 class Article(models.Model):
