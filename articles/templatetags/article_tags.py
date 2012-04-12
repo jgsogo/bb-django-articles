@@ -134,7 +134,11 @@ class GetArticleArchivesNode(template.Node):
                     archives[pub.year] = {}
 
                 # make sure we know that we have an article posted in this month/year
-                archives[pub.year][pub.month] = True
+                if pub.month in archives[pub.year]:
+                    archives[pub.year][pub.month] += 1
+                else:
+                    archives[pub.year][pub.month] = 1
+                #archives[pub.year][pub.month] = True
 
             dt_archives = []
 
@@ -152,7 +156,7 @@ class GetArticleArchivesNode(template.Node):
                 m.sort()
 
                 # now create a list of datetime objects for each month/year
-                months = [datetime(year, month, 1) for month in m]
+                months = [(datetime(year, month, 1), archives[year][month]) for month in m]
 
                 # append this list to our final collection
                 dt_archives.append( ( year, tuple(months) ) )
