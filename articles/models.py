@@ -4,6 +4,7 @@ import logging
 import mimetypes
 import re
 import urllib
+import htmlentitydefs
 
 from django.db import models
 from django.db.models import Q
@@ -45,11 +46,41 @@ ADDTHIS_USE_AUTHOR = getattr(settings, 'ADDTHIS_USE_AUTHOR', True)
 DEFAULT_ADDTHIS_USER = getattr(settings, 'DEFAULT_ADDTHIS_USER', None)
 
 # regex used to find links in an article
-LINK_RE = re.compile('<a.*?href="(.*?)".*?>(.*?)</a>', re.I|re.M)
-TITLE_RE = re.compile('<title.*?>(.*?)</title>', re.I|re.M)
+LINK_RE = re.compile(ur'<a.*?href="(.*?)".*?>(.*?)</a>', re.I|re.M)
+TITLE_RE = re.compile(ur'<title.*?>(.*?)</title>', re.I|re.M)
 TAG_RE = re.compile('[^a-z0-9\-_\+\:\.]?', re.I)
 
 log = logging.getLogger('articles.models')
+
+def unescape(text):
+    """
+    This function converts HTML entities and character references to ordinary characters.
+    \sa http://effbot.org/zone/re-sub.htm#unescape-html
+    ##
+    # Removes HTML or XML character references and entities from a text string.
+    #
+    # @param text The HTML (or XML) source text.
+    # @return The plain text, as a Unicode string, if necessary.
+    """
+    def fixup(m):
+        text = m.group(0)
+        if text[:2] == "&#":
+            # character reference
+            try:
+                if text[:3] == "&#x":
+                    return unichr(int(text[3:-1], 16))
+                else:
+                    return unichr(int(text[2:-1]))
+            except ValueError:
+                pass
+        else:
+            # named entity
+            try:
+                text = unichr(htmlentitydefs.name2codepoint[text[1:-1]])
+            except KeyError:
+                pass
+        return text # leave as is
+    return re.sub("&#?\w+;", fixup, text)
 
 def get_name(user):
     """
@@ -436,6 +467,7 @@ class Article(models.Model):
         log.debug('Locating links in article: %s' % (self,))
         for link in LINK_RE.finditer(self.rendered_content):
             url = link.group(1)
+            url = unescape(url)
             log.debug('Do we have a title for "%s"?' % (url,))
             key = 'href_title_' + sha1(url).hexdigest()
 
@@ -451,6 +483,9 @@ class Article(models.Model):
                         # open the URL
                         c = urllib.urlopen(url)
                         html = c.read()
+                        # html can be on any language, check encoding
+                        encoding=c.headers['content-type'].split('charset=')[-1]
+                        html = unicode(html, encoding)
                         c.close()
 
                         # try to determine the title of the target
@@ -463,7 +498,7 @@ class Article(models.Model):
                         log.warn('Failed to retrieve the title for "%s"; using link text "%s"' % (url, title))
 
                 # cache the page title for a week
-                log.debug('Using "%s" as title for "%s"' % (title, url))
+                log.debug(u'Using "%s" as title for "%s"' % (title, url))
                 cache.set(key, title, 604800)
 
             # add it to the list of links and titles
