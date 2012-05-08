@@ -2,11 +2,14 @@ import logging
 
 from django.contrib import admin
 from django.contrib.auth.models import User
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
-from forms import ArticleAdminForm
-from models import Tag, Article, ArticleStatus, Attachment
+from articles.forms import ArticleAdminForm
+from articles.models import Article, ArticleStatus, Attachment, Tag
 
 log = logging.getLogger('articles.admin')
+
+USE_TAGGIT = 'taggit' in settings.INSTALLED_APPS
 
 class TagAdmin(admin.ModelAdmin):
     list_display = ('name', 'article_count')
@@ -59,7 +62,10 @@ class ArticleAdmin(admin.ModelAdmin):
         }),
     )
 
-    filter_horizontal = ('tags', 'followup_for', 'related_articles')
+    if USE_TAGGIT:
+        filter_horizontal = ('followup_for', 'related_articles')
+    else:
+        filter_horizontal = ('tags', 'followup_for', 'related_articles')
     prepopulated_fields = {'slug': ('title',)}
 
     def tag_count(self, obj):
@@ -88,7 +94,7 @@ class ArticleAdmin(admin.ModelAdmin):
         for status in ArticleStatus.objects.all():
             name = 'mark_status_%i' % status.id
             actions[name] = (dynamic_status(name, status), name, _('Set status of selected to "%s"' % status))
-
+        
         def dynamic_tag(name, tag):
             def status_func(self, request, queryset):
                 for article in queryset.iterator():
@@ -103,14 +109,13 @@ class ArticleAdmin(admin.ModelAdmin):
         for tag in Tag.objects.all():
             name = 'apply_tag_%s' % tag.pk
             actions[name] = (dynamic_tag(name, tag), name, _('Apply Tag: %s' % (tag.slug,)))
-
+        
         return actions
 
     actions = [mark_active, mark_inactive]
 
     def save_model(self, request, obj, form, change):
         """Set the article's author based on the logged in user and make sure at least one site is selected"""
-
         try:
             author = obj.author
         except User.DoesNotExist:
@@ -130,7 +135,8 @@ class ArticleAdmin(admin.ModelAdmin):
         else:
             return self.model._default_manager.filter(author=request.user)
 
-admin.site.register(Tag, TagAdmin)
+if not USE_TAGGIT:
+    admin.site.register(Tag, TagAdmin)
 admin.site.register(Article, ArticleAdmin)
 admin.site.register(ArticleStatus, ArticleStatusAdmin)
 

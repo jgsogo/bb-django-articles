@@ -1,10 +1,13 @@
 import logging
 
 from django import forms
+from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
-from models import Article, Tag
+from articles.models import Article, Tag
 
 log = logging.getLogger('articles.forms')
+
+USE_TAGGIT = 'taggit' in settings.INSTALLED_APPS
 
 def tag(name):
     """Returns a Tag object for the given name"""
@@ -22,29 +25,30 @@ def tag(name):
     return t
 
 class ArticleAdminForm(forms.ModelForm):
-    tags = forms.CharField(initial='', required=False,
-                           widget=forms.TextInput(attrs={'size': 100}),
-                           help_text=_('Words that describe this article'))
+    if not USE_TAGGIT:
+        tags = forms.CharField(initial='', required=False,
+                               widget=forms.TextInput(attrs={'size': 100}),
+                               help_text=_('Words that describe this article'))
 
-    def __init__(self, *args, **kwargs):
-        """Sets the list of tags to be a string"""
-
-        instance = kwargs.get('instance', None)
-        if instance:
-            init = kwargs.get('initial', {})
-            init['tags'] = ' '.join([t.name for t in instance.tags.all()])
-            kwargs['initial'] = init
-
-        super(ArticleAdminForm, self).__init__(*args, **kwargs)
-
-    def clean_tags(self):
-        """Turns the string of tags into a list"""
-
-        tags = [tag(t.strip()) for t in self.cleaned_data['tags'].split() if len(t.strip())]
-
-        log.debug('Tagging Article %s with: %s' % (self.cleaned_data['title'], tags))
-        self.cleaned_data['tags'] = tags
-        return self.cleaned_data['tags']
+        def __init__(self, *args, **kwargs):
+            """Sets the list of tags to be a string"""
+        
+            instance = kwargs.get('instance', None)
+            if instance:
+                init = kwargs.get('initial', {})
+                init['tags'] = ', '.join([t.name for t in instance.tags.all()])
+                kwargs['initial'] = init
+        
+            super(ArticleAdminForm, self).__init__(*args, **kwargs)
+        
+        def clean_tags(self):
+            """Turns the string of tags into a list"""
+        
+            tags = [tag(t.strip()) for t in self.cleaned_data['tags'].split(',') if len(t.strip())]
+        
+            log.debug('Tagging Article %s with: %s' % (self.cleaned_data['title'], tags))
+            self.cleaned_data['tags'] = tags
+            return self.cleaned_data['tags']
 
     class Meta:
         model = Article

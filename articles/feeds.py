@@ -68,7 +68,7 @@ class TagFeed(Feed, SiteMixin):
         articles = cache.get(key)
 
         if articles is None:
-            articles = list(obj.article_set.live().order_by('-publish_date'))
+            articles = list(Article.objects.filter(tags__slug__in=[obj.slug]).distinct().order_by('-publish_date'))
             cache.set(key, articles, FEED_TIMEOUT)
 
         return articles

@@ -1,7 +1,7 @@
 from django.core.management.base import NoArgsCommand
 from articles.models import Article, Tag
 
-class Command(NoArgsCommand):
+class Command(NoArgsCommand):    
     help = """Converts our old categories into tags"""
 
     def handle_noargs(self, **opts):
