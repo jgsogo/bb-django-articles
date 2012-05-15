@@ -1,5 +1,4 @@
 from hashlib import sha1
-from datetime import datetime
 import logging
 import mimetypes
 import re
@@ -16,6 +15,7 @@ from django.conf import settings
 from django.template.defaultfilters import slugify, striptags
 from django.utils.translation import ugettext_lazy as _
 from django.utils.text import truncate_html_words
+from django.utils.timezone import now
 
 from articles.decorators import logtime, once_per_instance
 
@@ -208,10 +208,9 @@ class ArticleManager(models.Manager):
         Retrieves all active articles which have been published and have not
         yet expired.
         """
-        now = datetime.now()
         return self.get_query_set().filter(
                 Q(expiration_date__isnull=True) |
-                Q(expiration_date__gte=now),
+                Q(expiration_date__gte=now()),
                 publish_date__lte=now,
                 is_active=True)
 
@@ -257,7 +256,7 @@ class Article(models.Model):
     followup_for = models.ManyToManyField('self', symmetrical=False, blank=True, help_text=_('Select any other articles that this article follows up on.'), related_name='followups')
     related_articles = models.ManyToManyField('self', blank=True)
 
-    publish_date = models.DateTimeField(default=datetime.now, help_text=_('The date and time this article shall appear online.'))
+    publish_date = models.DateTimeField(default=now, help_text=_('The date and time this article shall appear online.'))
     expiration_date = models.DateTimeField(blank=True, null=True, help_text=_('Leave blank if the article does not expire.'))
 
     is_active = models.BooleanField(default=True, blank=True)
@@ -280,7 +279,7 @@ class Article(models.Model):
 
         if self.id:
             # mark the article as inactive if it's expired and still active
-            if self.expiration_date and self.expiration_date <= datetime.now() and self.is_active:
+            if self.expiration_date and self.expiration_date <= now() and self.is_active:
                 self.is_active = False
                 self.save()
 
@@ -563,7 +562,7 @@ class Article(models.Model):
         get_latest_by = 'publish_date'
 
 class Attachment(models.Model):
-    upload_to = lambda inst, fn: 'attach/%s/%s/%s' % (datetime.now().year, inst.article.slug, fn)
+    upload_to = lambda inst, fn: 'attach/%s/%s/%s' % (now().year, inst.article.slug, fn)
 
     article = models.ForeignKey(Article, related_name='attachments')
     attachment = models.FileField(upload_to=upload_to)
