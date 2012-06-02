@@ -4,6 +4,7 @@ import mimetypes
 import re
 import urllib
 import htmlentitydefs
+from datetime import datetime
 
 from django.db import models
 from django.db.models import Q
@@ -23,8 +24,8 @@ USE_TAGGIT = 'taggit' in settings.INSTALLED_APPS
 if USE_TAGGIT:
     from taggit.managers import TaggableManager
     from taggit.models import Tag
-        
-        
+
+
 WORD_LIMIT = getattr(settings, 'ARTICLES_TEASER_LIMIT', 75)
 AUTO_TAG = getattr(settings, 'ARTICLES_AUTO_TAG', True)
 DEFAULT_DB = getattr(settings, 'ARTICLES_DEFAULT_DB', 'default')
@@ -251,7 +252,7 @@ class Article(models.Model):
         tags = TaggableManager(blank=True)
     else:
         tags = models.ManyToManyField(Tag, help_text=_('Tags that describe this article'), blank=True)
-        
+
     auto_tag = models.BooleanField(default=AUTO_TAG, blank=True, help_text=_('Check this if you want to automatically assign any existing tags to this article based on its content.'))
     followup_for = models.ManyToManyField('self', symmetrical=False, blank=True, help_text=_('Select any other articles that this article follows up on.'), related_name='followups')
     related_articles = models.ManyToManyField('self', blank=True)
@@ -380,7 +381,7 @@ class Article(models.Model):
 
     @logtime
     @once_per_instance
-    def do_auto_tag(self, using=DEFAULT_DB):        
+    def do_auto_tag(self, using=DEFAULT_DB):
         """
         Performs the auto-tagging work if necessary.
 
