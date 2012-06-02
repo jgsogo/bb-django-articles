@@ -290,6 +290,10 @@ class Article(models.Model):
     def __unicode__(self):
         return self.title
 
+    def is_online(self):
+        return Article.objects.live().filter(pk=self.pk).exists()
+    online = property(is_online)
+
     def save(self, *args, **kwargs):
         """Renders the article using the appropriate markup language."""
 
