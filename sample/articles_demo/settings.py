@@ -104,7 +104,7 @@ INSTALLED_APPS = (
 
     'articles',
     'south',
-
+    'taggit',
     'django_coverage',
 )
 

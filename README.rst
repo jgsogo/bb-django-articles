@@ -5,7 +5,7 @@ handful of other awesome sites.
 Features
 ========
 
-* Tags for articles, with a tag cloud template tag
+* Tags for articles (django-taggit if available, or built-in ones), with a tag cloud template tag
 * Auto-completion for tags in the Django admin
 * Auto-tagging: assigning existing tags to articles when they're present in the
   article content
@@ -45,6 +45,11 @@ If you plan to use the schema migrations, you'll need to install `South
 
 .. note:: New in 2.1.0
 
+You can install `Taggit <https://github.com/alex/django-taggit>`_ for tags
+(recomended), otherwise it will use bult-in feature.
+
+.. note:: New for 2.5
+
 Installation
 ============
 
@@ -57,6 +62,7 @@ Use one of the following commands::
 
     hg clone http://bitbucket.org/codekoala/django-articles/
     hg clone http://django-articles.googlecode.com/hg/ django-articles
+    hg clone https://bitbucket.org/jgsogo/django-articles (taggit feature available)
 
 Checkout from GitHub
 --------------------
@@ -64,6 +70,7 @@ Checkout from GitHub
 Use the following command::
 
     git clone http://github.com/codekoala/django-articles.git
+    git clone https://github.com/jgsogo/django-articles (taggit feature available)
 
 The CheeseShop
 --------------
@@ -72,6 +79,7 @@ Use one of the following commands::
 
     pip install django-articles
     easy_install django-articles
+    (taggit feature not available)
 
 Configuration
 =============
@@ -91,6 +99,7 @@ First of all, you must add this project to your list of ``INSTALLED_APPS`` in
         ...
         'articles',
         'south',
+        'taggit',
         ...
     )
 
