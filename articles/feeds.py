@@ -4,6 +4,7 @@ from django.contrib.sites.models import Site
 from django.core.cache import cache
 from django.core.urlresolvers import reverse
 from django.utils.feedgenerator import Atom1Feed
+from django.utils.translation import ugettext_lazy as _
 
 from articles.models import Article, Tag
 
@@ -21,11 +22,16 @@ class SiteMixin(object):
 
 class LatestEntries(Feed, SiteMixin):
 
+    description_template = 'feeds/latest_description.html'
+
     def title(self):
-        return "%s Articles" % (self.site.name,)
+        return _(u"%(site)s Articles" % {'site' : self.site.name} )
 
     def link(self):
         return reverse('articles_archive')
+
+    def description(self):
+        return _(u"Last articles in site %(site)s" % {'site' : self.site.name} )
 
     def items(self):
         key = 'latest_articles'
@@ -45,6 +51,8 @@ class LatestEntries(Feed, SiteMixin):
 
 class TagFeed(Feed, SiteMixin):
 
+    description_template = 'feeds/tags_description.html'
+
     def get_object(self, request, slug):
         try:
             return Tag.objects.get(slug__iexact=slug)
@@ -52,13 +60,13 @@ class TagFeed(Feed, SiteMixin):
             raise FeedDoesNotExist
 
     def title(self, obj):
-        return "%s: Newest Articles Tagged '%s'" % (self.site.name, obj.name)
+        return _(u"%(site)s: Newest Articles Tagged '%(tag)s'" % {'site': self.site.name, 'tag' : obj.name})
 
     def link(self, obj):
         return obj.get_absolute_url()
 
     def description(self, obj):
-        return "Articles Tagged '%s'" % obj.name
+        return _(u"Articles Tagged '%(tag)s'" % { 'tag': obj.name})
 
     def items(self, obj):
         return self.item_set(obj)[:10]

@@ -1,2 +1,5 @@
-{% load markup %}
-{{ obj.teaser|striptags|safe|linebreaksbr }}
+{% load i18n %}
+<p><strong>{% trans "Author"%}</strong>: {{obj.author}}</p>
+<p>{{ obj.teaser|safe }}</p>
+
+({% trans "read more"%}: <a href="http://{{site}}{{obj.get_absolute_url}}">http://{{site}}{{obj.get_absolute_url}}</a>)

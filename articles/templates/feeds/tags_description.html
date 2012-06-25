@@ -1,2 +1,4 @@
-{% load markup %}
-{{ obj.teaser|striptags|safe|linebreaksbr }}
+{% load i18n %}
+{{ obj.teaser|safe }}
+
+({% trans "read more"%}: <a href="http://{{site}}{{obj.get_absolute_url}}">http://{{site}}{{obj.get_absolute_url}}</a>)
